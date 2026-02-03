@@ -9,7 +9,7 @@
   body{
     margin:0;
     min-height:100vh;
-    background:#87CEEB;
+    background:#87CEEB; /* sky blue */
     font-family:Arial, sans-serif;
     text-align:center;
     overflow:hidden;
@@ -19,12 +19,15 @@
     color:white;
     text-shadow:2px 2px rgba(0,0,0,.3);
     margin-top:40px;
+    margin-bottom:8px;
+    padding:0 12px;
   }
 
   .sub{
     color:white;
     opacity:.95;
-    margin-bottom:20px;
+    margin:0 12px 20px;
+    font-size:16px;
   }
 
   img{
@@ -33,6 +36,8 @@
     box-shadow:0 10px 25px rgba(0,0,0,.25);
     background:white;
     transition:transform .25s ease;
+    display:block;
+    margin:0 auto;
   }
 
   .buttons{
@@ -46,12 +51,13 @@
     border:none;
     border-radius:16px;
     cursor:pointer;
-    transition:transform .25s ease;
+    transition:transform .25s ease, opacity .25s ease;
   }
 
   #yesBtn{
     background:#ff4d6d;
     color:white;
+    transform-origin:center;
   }
 
   #noBtn{
@@ -59,32 +65,81 @@
     color:white;
   }
 
-  /* CONFETTI */
+  /* Confetti particles */
   .confetti{
     position:fixed;
-    top:-20px;
-    font-size:24px;
-    animation:fall linear forwards;
+    top:-30px;
+    font-size:26px;
     pointer-events:none;
+    animation:fall linear forwards;
+    z-index:99999;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,.25));
   }
 
   @keyframes fall{
     to{
-      transform:translateY(110vh) rotate(360deg);
+      transform:translateY(120vh) rotate(720deg);
       opacity:0;
     }
   }
 
-  /* FINAL MESSAGE */
-  #final{
+  /* Fullscreen YES overlay */
+  #yesOverlay{
+    position:fixed;
+    inset:0;
     display:none;
-    margin-top:30px;
+    background:rgba(0,0,0,.35);
+    z-index:9999;
+    overflow:hidden;
   }
 
-  #final h2{
+  #bigYes{
+    position:absolute;
+    inset:0;
+    width:100vw;
+    height:100vh;
+    border-radius:0;
+    font-size:60px;
+    font-weight:800;
+    letter-spacing:1px;
+    background:#ff4d6d;
     color:white;
-    font-size:32px;
-    text-shadow:2px 2px rgba(0,0,0,.3);
+    border:none;
+    cursor:pointer;
+  }
+
+  /* Text on top of fullscreen yes */
+  #overlayText{
+    position:absolute;
+    top:12vh;
+    left:50%;
+    transform:translateX(-50%);
+    width:min(92vw, 520px);
+    color:white;
+    text-shadow:2px 2px rgba(0,0,0,.35);
+    z-index:10000;
+    pointer-events:none;
+  }
+
+  #overlayText h2{
+    margin:0 0 8px;
+    font-size:34px;
+  }
+
+  #overlayText p{
+    margin:0;
+    font-size:18px;
+    opacity:.95;
+  }
+
+  /* little bounce for YES */
+  .pop{
+    animation:pop .25s ease;
+  }
+  @keyframes pop{
+    0%{ transform:scale(1); }
+    60%{ transform:scale(1.08); }
+    100%{ transform:scale(1); }
   }
 </style>
 </head>
@@ -101,16 +156,23 @@
     <button id="noBtn">NO 😐</button>
   </div>
 
-  <div id="final">
-    <h2>🎉 YAY!! Best choice ever 💕</h2>
-    <p class="sub">ik where you live 🌚</p>
+  <!-- FULLSCREEN YES OVERLAY -->
+  <div id="yesOverlay">
+    <button id="bigYes">YES 💕💘</button>
+
+    <div id="overlayText">
+      <h2>🎉 YAYYYYY!! 👏👏👏</h2>
+      <p>ik where u live 🌚</p>
+    </div>
   </div>
 
 <script>
   const img = document.getElementById("img");
   const noBtn = document.getElementById("noBtn");
   const yesBtn = document.getElementById("yesBtn");
-  const final = document.getElementById("final");
+
+  const yesOverlay = document.getElementById("yesOverlay");
+  const bigYes = document.getElementById("bigYes");
 
   const pics = ["pic2.jpg","pic3.jpg","pic4.jpg"];
   let noCount = 0;
@@ -118,38 +180,93 @@
   noBtn.onclick = () => {
     if(noCount < pics.length){
       img.src = pics[noCount];
-      img.style.transform = "scale(1.05)";
+      img.style.transform = "scale(1.06)";
       setTimeout(()=>img.style.transform="scale(1)",150);
 
-      // YES grows
-      yesBtn.style.transform = `scale(${1 + (noCount+1)*0.2})`;
+      // YES grows a bit each NO
+      yesBtn.style.transform = `scale(${1 + (noCount+1)*0.22})`;
+      yesBtn.classList.remove("pop");
+      void yesBtn.offsetWidth;
+      yesBtn.classList.add("pop");
+
       noCount++;
     } else {
       // after last NO, YES dominates
-      yesBtn.style.transform = "scale(2)";
+      yesBtn.style.transform = "scale(2.2)";
     }
   };
 
   yesBtn.onclick = () => {
-    final.style.display = "block";
-    rainConfetti();
+    launchYes();
   };
 
-  function rainConfetti(){
-    const emojis = ["💖","💕","💘","🎈","🎉"];
-    for(let i=0;i<80;i++){
+  // Clicking the big fullscreen YES just re-triggers celebration (extra confetti)
+  bigYes.onclick = () => {
+    rainConfetti(180);
+    burstConfetti(120);
+  };
+
+  function launchYes(){
+    // Show fullscreen YES overlay
+    yesOverlay.style.display = "block";
+
+    // Hide normal stuff behind
+    document.querySelector(".buttons").style.display = "none";
+    img.style.display = "none";
+
+    // MASSIVE celebration
+    rainConfetti(240);
+    burstConfetti(160);
+
+    // keep some extra waves
+    setTimeout(()=>rainConfetti(220), 700);
+    setTimeout(()=>burstConfetti(140), 1200);
+    setTimeout(()=>rainConfetti(200), 1900);
+  }
+
+  // Continuous falling confetti
+  function rainConfetti(amount){
+    const emojis = ["💖","💕","💘","🎈","🎉","👏","🥳","💞","✨","🌟"];
+    for(let i=0;i<amount;i++){
       const c = document.createElement("div");
       c.className = "confetti";
       c.innerText = emojis[Math.floor(Math.random()*emojis.length)];
       c.style.left = Math.random()*100 + "vw";
-      c.style.animationDuration = 2 + Math.random()*3 + "s";
-      document.body.appendChild(c);
+      c.style.animationDuration = (2 + Math.random()*3) + "s";
+      c.style.fontSize = (18 + Math.random()*22) + "px";
+      c.style.opacity = (0.8 + Math.random()*0.2);
 
-      setTimeout(()=>c.remove(),5000);
+      // slight horizontal drift
+      const drift = (Math.random()*120 - 60);
+      c.style.transform = `translateX(${drift}px)`;
+
+      document.body.appendChild(c);
+      setTimeout(()=>c.remove(), 5500);
+    }
+  }
+
+  // Burst from center for “BOOM” effect
+  function burstConfetti(amount){
+    const emojis = ["🎉","✨","💖","👏","🥳","💘","💞","🌟"];
+    for(let i=0;i<amount;i++){
+      const c = document.createElement("div");
+      c.className = "confetti";
+      c.innerText = emojis[Math.floor(Math.random()*emojis.length)];
+
+      const x = 50 + (Math.random()*20 - 10);
+      c.style.left = x + "vw";
+
+      c.style.animationDuration = (1.6 + Math.random()*2.2) + "s";
+      c.style.fontSize = (20 + Math.random()*28) + "px";
+
+      // random start positions (center-ish)
+      c.style.top = (35 + Math.random()*20) + "vh";
+
+      document.body.appendChild(c);
+      setTimeout(()=>c.remove(), 5000);
     }
   }
 </script>
 
 </body>
 </html>
-
