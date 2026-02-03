@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Valentine 💘</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: pink;
+      text-align: center;
+      padding-top: 40px;
+    }
+    img {
+      width: 280px;
+      border-radius: 20px;
+    }
+    button {
+      font-size: 20px;
+      padding: 12px 25px;
+      margin: 10px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    .yes {
+      background: #ff4d6d;
+      color: white;
+    }
+    .no {
+      background: #555;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>💘 Will you be my Valentine? 💘</h1>
+
+  <img src="https://i.imgur.com/3ZQ3ZQZ.png" alt="valentine">
+
+  <br><br>
+
+  <button class="yes" onclick="yesClick()">YES 💕</button>
+  <button class="no" id="noBtn" onclick="noClick()">NO 😐</button>
+
+  <script>
+    let noTexts = [
+      "Are you sure? 🤨",
+      "Really sure?? 😳",
+      "Think again 🥺",
+      "Last chance 😭",
+      "You're breaking my heart 💔",
+      "Ok… now you're just playing 😔",
+      "Just press YES already 😤❤️"
+    ];
+
+    let count = 0;
+
+    function noClick() {
+      const noBtn = document.getElementById("noBtn");
+      noBtn.innerText = noTexts[count % noTexts.length];
+      count++;
+    }
+
+    function yesClick() {
+      alert("YAAAAAY 💍💘 BEST DECISION EVER");
+    }
+  </script>
+
+</body>
+</html>
