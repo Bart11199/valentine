@@ -4,127 +4,226 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Valentine 💘</title>
+
   <style>
-    body {
+    body{
       font-family: Arial, sans-serif;
-      background: #87CEEB; /* sky blue */
-      text-align: center;
-      padding-top: 40px;
-      margin: 0;
-      overflow-x: hidden;
+      background:#87CEEB; /* sky blue */
+      text-align:center;
+      padding-top:40px;
+      margin:0;
+      overflow-x:hidden;
     }
 
     h1{
-      color: white;
-      text-shadow: 2px 2px rgba(0,0,0,0.25);
-      margin-bottom: 8px;
+      color:white;
+      text-shadow:2px 2px rgba(0,0,0,.3);
+      margin-bottom:8px;
     }
 
     .sub{
-      color: rgba(255,255,255,0.95);
-      margin-top: 0;
-      margin-bottom: 18px;
-      font-size: 16px;
+      color:rgba(255,255,255,.95);
+      margin-top:0;
+      margin-bottom:18px;
+      font-size:16px;
     }
 
     img{
-      width: 260px;
-      border-radius: 18px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-      margin: 10px auto 20px;
-      display: block;
+      width:260px;
+      border-radius:18px;
+      box-shadow:0 10px 25px rgba(0,0,0,.2);
+      margin:10px auto 20px;
+      display:block;
+      transition:transform .25s ease;
+      background:white;
     }
 
-    .wrap{
-      position: relative;
-      display: inline-block;
-      padding-bottom: 40px;
+    .btnRow{
+      margin-top:10px;
     }
 
     button{
-      font-size: 20px;
-      padding: 12px 26px;
-      margin: 10px;
-      border: none;
-      border-radius: 16px;
-      cursor: pointer;
-      transition: transform 0.25s ease, opacity 0.25s ease;
+      font-size:20px;
+      padding:12px 26px;
+      margin:10px;
+      border:none;
+      border-radius:16px;
+      cursor:pointer;
+      transition:transform .25s ease, opacity .25s ease;
     }
 
     #yesBtn{
-      background: #ff4d6d;
-      color: white;
-      transform-origin: center;
+      background:#ff4d6d;
+      color:white;
+      transform-origin:center;
     }
 
     #noBtn{
-      background: #2f6f7a;
-      color: white;
+      background:#2f6f7a;
+      color:white;
     }
 
-    /* cuando YES domina */
-    .final-yes {
-      position: fixed !important;
-      left: 0; top: 0;
-      width: 100vw;
-      height: 100vh;
-      border-radius: 0;
-      font-size: clamp(28px, 6vw, 64px);
-      z-index: 9999;
-      margin: 0;
+    /* Overlay para videos */
+    #overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.85);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:99999;
+      padding:20px;
+    }
+
+    #overlay video{
+      width:min(92vw, 520px);
+      border-radius:18px;
+      box-shadow:0 10px 30px rgba(0,0,0,.55);
+      background:black;
+    }
+
+    /* Solo YES al final (pantalla limpia) */
+    .only-yes #mainContent{
+      display:none;
+    }
+    .only-yes #onlyYesWrap{
+      display:block;
+    }
+    #onlyYesWrap{
+      display:none;
+      margin-top:22vh;
+    }
+    #onlyYesBtn{
+      background:#ff4d6d;
+      color:white;
+      font-size:28px;
+      padding:18px 40px;
+      border-radius:22px;
+      border:none;
+      cursor:pointer;
+      box-shadow:0 10px 25px rgba(0,0,0,.25);
+      transition:transform .2s ease;
+    }
+    #onlyYesBtn:hover{
+      transform:scale(1.05);
     }
   </style>
 </head>
+
 <body>
 
-  <h1>💘 Will you be my Valentine? 💘</h1>
-  <p class="sub">Say yes… or I’ll keep asking forever 😭</p>
+  <!-- CONTENIDO NORMAL -->
+  <div id="mainContent">
+    <h1>💘 Will you be my Valentine? 💘</h1>
+    <p class="sub">Say yes… or I’ll keep asking forever 😭</p>
 
-  <!-- TU IMAGEN LOCAL (del repo) -->
-  <img src="pic.png" alt="valentine image">
+    <!-- Imagen (empieza con pic.png) -->
+    <img id="valImg" src="pic.png" alt="valentine image">
 
-  <div class="wrap">
-    <button id="yesBtn" onclick="yesClick()">YES 💕</button>
-    <button id="noBtn" onclick="noClick()">NO 😐</button>
+    <div class="btnRow">
+      <button id="yesBtn" onclick="yesClick()">YES 💕</button>
+      <button id="noBtn" onclick="noClick()">NO 😐</button>
+    </div>
+  </div>
+
+  <!-- SOLO YES (después de video1) -->
+  <div id="onlyYesWrap">
+    <button id="onlyYesBtn" onclick="yesClick()">YES 💕</button>
+  </div>
+
+  <!-- OVERLAY DE VIDEO -->
+  <div id="overlay">
+    <video id="vid" controls playsinline></video>
   </div>
 
   <script>
+    const img = document.getElementById("valImg");
+    const noBtn = document.getElementById("noBtn");
     const yesBtn = document.getElementById("yesBtn");
-    const noBtn  = document.getElementById("noBtn");
 
-    let noTexts = [
+    const overlay = document.getElementById("overlay");
+    const vid = document.getElementById("vid");
+
+    // Secuencia de NO:
+    // 1) pic2, 2) pic3, 3) pic4, 4) video1
+    let noCount = 0;
+
+    // Mensajes del NO (opcional, puedes cambiar)
+    const noTexts = [
       "Are you sure? 🤨",
       "Really sure?? 😳",
       "Think again 🙃✌️",
-      "Last chance 😭",
-      "That hurts 💔",
-      "I’m stealing your blanket tonight 😭 (iykyk)",
-      "I know your IP (jk) 🌚",
-      "Ok ok… just press YES 😤❤️"
+      "Last chance 😭"
     ];
 
-    let count = 0;
-    let scale = 1;
+    // Tus archivos (exactos)
+    const imageSteps = ["pic2.jpg", "pic3.jpg", "pic4.jpg"];
+    const videoOnLastNo = "video1.MP4";
+    const yesVideo = "video2.MP4";
 
     function noClick() {
-      noBtn.innerText = noTexts[count % noTexts.length];
-      count++;
+      // Cambia texto del botón NO
+      noBtn.innerText = noTexts[Math.min(noCount, noTexts.length - 1)];
 
-      // YES crece cada vez
-      scale += 0.25;
-      yesBtn.style.transform = `scale(${scale})`;
+      // NO #1, #2, #3 -> cambia imagen
+      if (noCount < imageSteps.length) {
+        img.src = imageSteps[noCount];
+        img.style.transform = "scale(1.04)";
+        setTimeout(() => img.style.transform = "scale(1)", 180);
 
-      // al final YES ocupa todo
-      if (scale >= 4.0) {
-        noBtn.style.opacity = "0";
-        noBtn.style.pointerEvents = "none";
-        yesBtn.classList.add("final-yes");
-        yesBtn.innerText = "YES 💍💘 (you have no choice now)";
+        // (Opcional) YES crece un poquito cada NO
+        const scale = 1 + (noCount + 1) * 0.15;
+        yesBtn.style.transform = `scale(${scale})`;
+
+        noCount++;
+        return;
       }
+
+      // NO #4 (último) -> reproducir video1
+      playVideo(videoOnLastNo, () => {
+        // Cuando termine video1: dejar SOLO el YES en pantalla
+        document.body.classList.add("only-yes");
+      });
     }
 
     function yesClick() {
-      alert("YAAAAY 💘 You just made my whole day 😌");
+      // Al presionar YES -> reproducir video2
+      playVideo(yesVideo);
+    }
+
+    function playVideo(fileName, onEnd) {
+      overlay.style.display = "flex";
+      vid.src = fileName;
+      vid.currentTime = 0;
+      vid.muted = false; // audio ON
+      vid.volume = 1.0;
+
+      // limpiar listeners viejos
+      vid.onended = null;
+
+      // cuando termine
+      if (onEnd) {
+        vid.onended = () => {
+          overlay.style.display = "none";
+          vid.pause();
+          vid.src = "";
+          onEnd();
+        };
+      } else {
+        vid.onended = () => {
+          overlay.style.display = "none";
+          vid.pause();
+          vid.src = "";
+        };
+      }
+
+      // intentar reproducir
+      const p = vid.play();
+      if (p && typeof p.catch === "function") {
+        p.catch(() => {
+          // si el navegador bloquea, con "controls" se puede dar play manual
+        });
+      }
     }
   </script>
 
