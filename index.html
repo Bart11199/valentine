@@ -82,7 +82,7 @@
       background:black;
     }
 
-    /* Solo YES al final (pantalla limpia) */
+    /* Solo YES al final (después de video1) */
     .only-yes #mainContent{
       display:none;
     }
@@ -117,18 +117,18 @@
     <h1>💘 Will you be my Valentine? 💘</h1>
     <p class="sub">Say yes… or I’ll keep asking forever 😭</p>
 
-    <!-- Imagen (empieza con pic.png) -->
+    <!-- Empieza con pic.png -->
     <img id="valImg" src="pic.png" alt="valentine image">
 
     <div class="btnRow">
-      <button id="yesBtn" onclick="yesClick()">YES 💕</button>
-      <button id="noBtn" onclick="noClick()">NO 😐</button>
+      <button id="yesBtn">YES 💕</button>
+      <button id="noBtn">NO 😐</button>
     </div>
   </div>
 
   <!-- SOLO YES (después de video1) -->
   <div id="onlyYesWrap">
-    <button id="onlyYesBtn" onclick="yesClick()">YES 💕</button>
+    <button id="onlyYesBtn">YES 💕</button>
   </div>
 
   <!-- OVERLAY DE VIDEO -->
@@ -140,15 +140,17 @@
     const img = document.getElementById("valImg");
     const noBtn = document.getElementById("noBtn");
     const yesBtn = document.getElementById("yesBtn");
+    const onlyYesBtn = document.getElementById("onlyYesBtn");
 
     const overlay = document.getElementById("overlay");
     const vid = document.getElementById("vid");
 
-    // Secuencia de NO:
-    // 1) pic2, 2) pic3, 3) pic4, 4) video1
-    let noCount = 0;
+    // Archivos EXACTOS del repo
+    const pics = ["pic2.jpg", "pic3.jpg", "pic4.jpg"];
+    const video1 = "video1.MP4";
+    const video2 = "video2.MP4";
 
-    // Mensajes del NO (opcional, puedes cambiar)
+    // textos del NO
     const noTexts = [
       "Are you sure? 🤨",
       "Really sure?? 😳",
@@ -156,72 +158,68 @@
       "Last chance 😭"
     ];
 
-    // Tus archivos (exactos)
-    const imageSteps = ["pic2.jpg", "pic3.jpg", "pic4.jpg"];
-    const videoOnLastNo = "video1.MP4";
-    const yesVideo = "video2.MP4";
+    // 0->pic2, 1->pic3, 2->pic4, 3->video1
+    let noCount = 0;
+
+    noBtn.addEventListener("click", noClick);
+    yesBtn.addEventListener("click", yesClick);
+    onlyYesBtn.addEventListener("click", yesClick);
 
     function noClick() {
-      // Cambia texto del botón NO
+      // Cambia texto
       noBtn.innerText = noTexts[Math.min(noCount, noTexts.length - 1)];
 
-      // NO #1, #2, #3 -> cambia imagen
-      if (noCount < imageSteps.length) {
-        img.src = imageSteps[noCount];
-        img.style.transform = "scale(1.04)";
-        setTimeout(() => img.style.transform = "scale(1)", 180);
+      // NO #1-3: cambiar imagen
+      if (noCount === 0) img.src = pics[0];
+      else if (noCount === 1) img.src = pics[1];
+      else if (noCount === 2) img.src = pics[2];
 
-        // (Opcional) YES crece un poquito cada NO
-        const scale = 1 + (noCount + 1) * 0.15;
-        yesBtn.style.transform = `scale(${scale})`;
+      // Animación imagen
+      img.style.transform = "scale(1.05)";
+      setTimeout(() => img.style.transform = "scale(1)", 150);
 
-        noCount++;
-        return;
+      // YES crece un poquito
+      const scale = 1 + (noCount + 1) * 0.15;
+      yesBtn.style.transform = `scale(${scale})`;
+
+      // NO #4: video1
+      if (noCount === 3) {
+        playVideo(video1, () => {
+          // cuando termine video1 → solo YES
+          document.body.classList.add("only-yes");
+        });
       }
 
-      // NO #4 (último) -> reproducir video1
-      playVideo(videoOnLastNo, () => {
-        // Cuando termine video1: dejar SOLO el YES en pantalla
-        document.body.classList.add("only-yes");
-      });
+      // avanzar estado (clave)
+      noCount++;
     }
 
     function yesClick() {
-      // Al presionar YES -> reproducir video2
-      playVideo(yesVideo);
+      playVideo(video2);
     }
 
     function playVideo(fileName, onEnd) {
       overlay.style.display = "flex";
       vid.src = fileName;
       vid.currentTime = 0;
-      vid.muted = false; // audio ON
+      vid.muted = false;
       vid.volume = 1.0;
 
-      // limpiar listeners viejos
+      // limpiar handlers
       vid.onended = null;
 
-      // cuando termine
-      if (onEnd) {
-        vid.onended = () => {
-          overlay.style.display = "none";
-          vid.pause();
-          vid.src = "";
-          onEnd();
-        };
-      } else {
-        vid.onended = () => {
-          overlay.style.display = "none";
-          vid.pause();
-          vid.src = "";
-        };
-      }
+      vid.onended = () => {
+        overlay.style.display = "none";
+        vid.pause();
+        vid.src = "";
+        if (onEnd) onEnd();
+      };
 
-      // intentar reproducir
       const p = vid.play();
       if (p && typeof p.catch === "function") {
         p.catch(() => {
-          // si el navegador bloquea, con "controls" se puede dar play manual
+          // Si el navegador bloquea autoplay, como hay click + controls,
+          // se puede darle play manual sin problema.
         });
       }
     }
